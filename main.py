@@ -93,9 +93,9 @@ async def chat(request: Request):
                     "content": message
                 }
             ],
-            model="llama3-8b-8192", # Free, fast, and capable
+            model="llama-3.3-70b-versatile", # Free, fast, and capable
             temperature=0.7,
-            max_tokens=200,
+            max_tokens=300,
         )
 
         bot_reply = chat_completion.choices[0].message.content.strip()
