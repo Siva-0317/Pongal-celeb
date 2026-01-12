@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import google.generativeai as genai
 import os
 import json
 import traceback
+from groq import Groq  # Import Groq client
 
 app = FastAPI()
 
@@ -17,48 +17,53 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure Gemini
+# Configure Groq Client
+# Ensure GROQ_API_KEY is set in your environment variables
 try:
-    genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-    print("✅ Gemini API configured")
+    client = Groq(api_key=os.getenv("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"))
+    print("✅ Groq API configured")
 except Exception as e:
-    print(f"❌ Gemini API error: {e}")
+    print(f"❌ Groq API error: {e}")
 
+# UPDATED SYSTEM PROMPT: Enforces Tamil responses
 SYSTEM_PROMPT = """You are a friendly Pongal Celebrations 2026 chatbot for Easwari Engineering College.
 
-MENU (answer ONLY these items):
-1. Panagam
-2. Sweet Pongal 
-3. Ven Pongal 
-4. Varagu Pongal
-5. Thinai Pongal
-6. Gulab Jamun
-7. Black Channa Sundal
-8. White Channa Sundal
-9. Groundnut Sundal
-10. Milk Payasam
-11. Adai Payasam
-12. Kilangu
-13. Panakilangu
-14. Vadai
-15. Sugarcane
-16. Sweet Pongal
+**IMPORTANT INSTRUCTION:** Regardless of the language the user speaks (English or Tamil), you must **ALWAYS REPLY IN TAMIL**. 
+Your response will be read out loud by a text-to-speech engine, so keep it natural and conversational in Tamil.
 
-Keep answers precise (4-5 sentences)."""
+MENU (Only discuss these items):
+1. Panagam (பானகம்)
+2. Sweet Pongal (சர்க்கரை பொங்கல்)
+3. Ven Pongal (வெண் பொங்கல்)
+4. Varagu Pongal (வரகு பொங்கல்)
+5. Thinai Pongal (தினை பொங்கல்)
+6. Gulab Jamun (குலாப் ஜாமூன்)
+7. Black Channa Sundal (கருப்பு கொண்டைக்கடலை சுண்டல்)
+8. White Channa Sundal (வெள்ளை கொண்டைக்கடலை சுண்டல்)
+9. Groundnut Sundal (வேர்க்கடலை சுண்டல்)
+10. Milk Payasam (பால் பாயசம்)
+11. Adai Payasam (அடை பாயசம்)
+12. Kilangu (கிழங்கு)
+13. Panakilangu (பனங்கிழங்கு)
+14. Vadai (வடை)
+15. Sugarcane (கரும்பு)
+
+Keep answers short and sweet (maximum 2-3 sentences)."""
 
 def get_emotion(text):
+    # Simple keyword checking (can be expanded)
     text = text.lower()
-    if any(word in text for word in ['delicious', 'yummy', 'tasty', 'great']):
+    if any(word in text for word in ['super', 'nalla', 'suvai', 'happy', 'santhosham']):
         return 'excited'
-    if any(word in text for word in ['sorry', 'no']):
+    if any(word in text for word in ['sorry', 'mannikka', 'illai']):
         return 'sad'
-    if any(word in text for word in ['how', 'what', 'recipe']):
+    if any(word in text for word in ['epadi', 'enna', 'recipe', '?']):
         return 'thinking'
     return 'happy'
 
 @app.get("/")
 async def root():
-    return {"status": "Pongal Chatbot LIVE ✅", "url": "https://pongal-celeb.onrender.com"}
+    return {"status": "Pongal Chatbot LIVE (Groq Edition) ✅", "url": "https://pongal-celeb.onrender.com"}
 
 @app.post("/chat")
 async def chat(request: Request):
@@ -71,18 +76,32 @@ async def chat(request: Request):
         
         if not message:
             return JSONResponse({
-                "response": "Send me a message! 😊", 
+                "response": "தயவுசெய்து ஏதாவது கேளுங்கள்! 😊", # "Please ask something" in Tamil
                 "emotion": "happy"
             })
         
-        # Generate response
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        full_prompt = SYSTEM_PROMPT + f"\n\nUser: {message}\nBot:"
-        response = model.generate_content(full_prompt)
-        bot_reply = response.text.strip()  # Limit length
+        # Call Groq API
+        # We use 'llama3-70b-8192' or 'mixtral-8x7b-32768' for good Tamil support
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": SYSTEM_PROMPT
+                },
+                {
+                    "role": "user",
+                    "content": message
+                }
+            ],
+            model="llama3-8b-8192", # Free, fast, and capable
+            temperature=0.7,
+            max_tokens=200,
+        )
+
+        bot_reply = chat_completion.choices[0].message.content.strip()
         
         emotion = get_emotion(bot_reply)
-        print(f"🤖 Reply: {bot_reply}")
+        print(f"🤖 Reply (Tamil): {bot_reply}")
         
         return JSONResponse({
             "response": bot_reply,
@@ -95,10 +114,10 @@ async def chat(request: Request):
         print(f"Traceback: {traceback.format_exc()}")
         
         return JSONResponse({
-            "response": f"Oops! {error_msg[:50]}... Try again!",
+            "response": "மன்னிக்கவும், ஒரு சிறு தவறு நடந்துவிட்டது. மீண்டும் முயற்சிக்கவும்.", # Generic Tamil error message
             "emotion": "sad"
         }, status_code=500)
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "gemini": os.getenv("GEMINI_API_KEY") is not None}
+    return {"status": "healthy", "groq": os.getenv("GROQ_API_KEY") is not None}
