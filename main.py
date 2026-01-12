@@ -83,7 +83,7 @@ async def chat(request: Request):
             ],
             model="llama-3.3-70b-versatile",
             temperature=0.7,
-            max_tokens=300,
+            max_tokens=700,
         )
 
         bot_reply = chat_completion.choices[0].message.content.strip()
