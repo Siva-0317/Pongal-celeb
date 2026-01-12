@@ -20,7 +20,7 @@ app.add_middleware(
 # Configure Groq Client
 # Ensure GROQ_API_KEY is set in your environment variables
 try:
-    client = Groq(api_key=os.getenv("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"))
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     print("✅ Groq API configured")
 except Exception as e:
     print(f"❌ Groq API error: {e}")
