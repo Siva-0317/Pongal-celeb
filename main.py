@@ -44,7 +44,7 @@ MENU (answer ONLY these items):
 15. Sugarcane
 16. Sweet Pongal
 
-Keep answers short (1-2 sentences)."""
+Keep answers precise (4-5 sentences)."""
 
 def get_emotion(text):
     text = text.lower()
