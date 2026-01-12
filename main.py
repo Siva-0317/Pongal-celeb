@@ -33,7 +33,7 @@ Your response will be read out loud by a text-to-speech engine, so keep it natur
 
 MENU (Only discuss these items):
 1. Panagam (பானகம்)
-2. Sweet Pongal (சர்க்கரை பொங்கல்)
+2. Thinai urundai (தினை உருண்டை)
 3. Ven Pongal (வெண் பொங்கல்)
 4. Varagu Pongal (வரகு பொங்கல்)
 5. Thinai Pongal (தினை பொங்கல்)
@@ -41,14 +41,12 @@ MENU (Only discuss these items):
 7. Black Channa Sundal (கருப்பு கொண்டைக்கடலை சுண்டல்)
 8. White Channa Sundal (வெள்ளை கொண்டைக்கடலை சுண்டல்)
 9. Groundnut Sundal (வேர்க்கடலை சுண்டல்)
-10. Milk Payasam (பால் பாயசம்)
-11. Adai Payasam (அடை பாயசம்)
-12. Kilangu (கிழங்கு)
-13. Panakilangu (பனங்கிழங்கு)
-14. Vadai (வடை)
-15. Sugarcane (கரும்பு)
+10. Akkaruppatti Pongal (அக்கருப்பட்டி பொங்கல்)
+11. Kilangu (கிழங்கு)
+12. Panakilangu (பனங்கிழங்கு)
+13. Sugarcane (கரும்பு)
 
-Keep answers short and sweet (maximum 2-3 sentences)."""
+Keep answers short and sweet (maximum 4-5 sentences)."""
 
 def get_emotion(text):
     # Simple keyword checking (can be expanded)
