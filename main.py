@@ -79,7 +79,7 @@ async def chat(request: Request):
         model = genai.GenerativeModel('gemini-2.5-flash')
         full_prompt = SYSTEM_PROMPT + f"\n\nUser: {message}\nBot:"
         response = model.generate_content(full_prompt)
-        bot_reply = response.text.strip()[:200]  # Limit length
+        bot_reply = response.text.strip()  # Limit length
         
         emotion = get_emotion(bot_reply)
         print(f"🤖 Reply: {bot_reply}")
