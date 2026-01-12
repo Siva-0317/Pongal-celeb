@@ -76,7 +76,7 @@ async def chat(request: Request):
             })
         
         # Generate response
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         full_prompt = SYSTEM_PROMPT + f"\n\nUser: {message}\nBot:"
         response = model.generate_content(full_prompt)
         bot_reply = response.text.strip()[:200]  # Limit length
