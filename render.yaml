@@ -2,10 +2,6 @@ services:
   - type: web
     name: pongal-chatbot
     env: python
+    pythonVersion: 3.11.9
     buildCommand: pip install --no-cache-dir -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.9
-      - key: PIP_NO_CACHE_DIR
-        value: "1"
