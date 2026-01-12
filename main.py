@@ -1,10 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 import os
 import json
 import traceback
+import uuid
 from groq import Groq  # Import Groq client
+from gtts import gTTS   # Free Google TTS
 
 app = FastAPI()
 
@@ -18,14 +20,13 @@ app.add_middleware(
 )
 
 # Configure Groq Client
-# Ensure GROQ_API_KEY is set in your environment variables
 try:
     client = Groq(api_key=os.getenv("GROQ_API_KEY"))
     print("✅ Groq API configured")
 except Exception as e:
     print(f"❌ Groq API error: {e}")
 
-# UPDATED SYSTEM PROMPT: Enforces Tamil responses
+# UPDATED SYSTEM PROMPT
 SYSTEM_PROMPT = """You are a friendly Pongal Celebrations 2026 chatbot for Easwari Engineering College.
 
 **IMPORTANT INSTRUCTION:** Regardless of the language the user speaks (English or Tamil), you must **ALWAYS REPLY IN TAMIL**. 
@@ -49,7 +50,6 @@ MENU (Only discuss these items):
 Keep answers short and sweet (maximum 4-5 sentences)."""
 
 def get_emotion(text):
-    # Simple keyword checking (can be expanded)
     text = text.lower()
     if any(word in text for word in ['super', 'nalla', 'suvai', 'happy', 'santhosham']):
         return 'excited'
@@ -66,38 +66,27 @@ async def root():
 @app.post("/chat")
 async def chat(request: Request):
     try:
-        # Handle ANY request format
         data = await request.json()
         message = data.get("message", "") if data else ""
-        
         print(f"📨 Received: {message}")
         
         if not message:
             return JSONResponse({
-                "response": "தயவுசெய்து ஏதாவது கேளுங்கள்! 😊", # "Please ask something" in Tamil
+                "response": "தயவுசெய்து ஏதாவது கேளுங்கள்! 😊",
                 "emotion": "happy"
             })
         
-        # Call Groq API
-        # We use 'llama3-70b-8192' or 'mixtral-8x7b-32768' for good Tamil support
         chat_completion = client.chat.completions.create(
             messages=[
-                {
-                    "role": "system",
-                    "content": SYSTEM_PROMPT
-                },
-                {
-                    "role": "user",
-                    "content": message
-                }
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": message}
             ],
-            model="llama-3.3-70b-versatile", # Free, fast, and capable
+            model="llama-3.3-70b-versatile",
             temperature=0.7,
             max_tokens=300,
         )
 
         bot_reply = chat_completion.choices[0].message.content.strip()
-        
         emotion = get_emotion(bot_reply)
         print(f"🤖 Reply (Tamil): {bot_reply}")
         
@@ -107,14 +96,33 @@ async def chat(request: Request):
         })
         
     except Exception as e:
-        error_msg = str(e)
-        print(f"❌ ERROR: {error_msg}")
-        print(f"Traceback: {traceback.format_exc()}")
-        
+        print(f"❌ ERROR: {e}")
+        print(traceback.format_exc())
         return JSONResponse({
-            "response": "மன்னிக்கவும், ஒரு சிறு தவறு நடந்துவிட்டது. மீண்டும் முயற்சிக்கவும்.", # Generic Tamil error message
+            "response": "மன்னிக்கவும், ஒரு சிறு தவறு நடந்துவிட்டது. மீண்டும் முயற்சிக்கவும்.",
             "emotion": "sad"
         }, status_code=500)
+
+@app.post("/tts")
+async def tts(request: Request):
+    """Generate Tamil speech audio from text using gTTS (free)"""
+    try:
+        data = await request.json()
+        text = data.get("text", "")
+        if not text:
+            return JSONResponse({"error": "No text provided"}, status_code=400)
+
+        # Generate MP3 file with gTTS
+        filename = f"tts_{uuid.uuid4().hex}.mp3"
+        tts = gTTS(text, lang="ta")
+        tts.save(filename)
+
+        # Return the file directly
+        return FileResponse(filename, media_type="audio/mpeg")
+
+    except Exception as e:
+        print(f"❌ TTS ERROR: {e}")
+        return JSONResponse({"error": "TTS failed"}, status_code=500)
 
 @app.get("/health")
 async def health():
